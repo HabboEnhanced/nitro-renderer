@@ -1,4 +1,4 @@
-import { IMessageDataWrapper } from '../../../../../core';
+import { IMessageDataWrapper } from '../../../../../core/communication/messages/IMessageDataWrapper';
 import { CatalogPageMessageProductData } from './CatalogPageMessageProductData';
 
 export class CatalogPageMessageOfferData

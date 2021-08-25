@@ -1,4 +1,4 @@
-import { IMessageDataWrapper } from '../../../../../core';
+import { IMessageDataWrapper } from '../../../../../core/communication/messages/IMessageDataWrapper';
 import { ClubOfferData } from './ClubOfferData';
 
 export class ClubOfferExtendedData extends ClubOfferData

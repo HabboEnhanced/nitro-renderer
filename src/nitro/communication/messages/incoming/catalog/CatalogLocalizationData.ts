@@ -1,4 +1,4 @@
-import { IMessageDataWrapper } from '../../../../../core';
+import { IMessageDataWrapper } from '../../../../../core/communication/messages/IMessageDataWrapper';
 import { ICatalogLocalizationData } from '../../parser/catalog/utils/ICatalogLocalizationData';
 
 export class CatalogLocalizationData implements ICatalogLocalizationData

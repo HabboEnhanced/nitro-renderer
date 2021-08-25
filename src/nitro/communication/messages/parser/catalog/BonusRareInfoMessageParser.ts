@@ -1,4 +1,4 @@
-import { IMessageDataWrapper } from '../../../../../core';
+import { IMessageDataWrapper } from '../../../../../core/communication/messages/IMessageDataWrapper';
 import { IMessageParser } from './../../../../../core';
 
 export class BonusRareInfoMessageParser implements IMessageParser
