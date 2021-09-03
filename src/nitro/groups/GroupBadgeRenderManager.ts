@@ -38,7 +38,7 @@ export class GroupBadgeRenderManager extends NitroManager implements IGroupBadge
 
     public onDispose()
     {
-        this._messages.forEach(m => Nitro.instance.communication.removeMessageEvent(new GroupBadgePartsEvent(this.initData)));
+        this._messages.forEach(m => Nitro.instance.communication.removeMessageEvent(m));
     }
 
     public async renderBadge(badgeStr: string): Promise<string>
@@ -81,7 +81,7 @@ export class GroupBadgeRenderManager extends NitroManager implements IGroupBadge
         }
 
         badge.render();
-        return new Promise( (resolve, reject) => resolve(TextureUtils.generateImageUrl(badge.container)));
+        return Promise.resolve(TextureUtils.generateImageUrl(badge.container));
     }
 
     private initData(event: GroupBadgePartsEvent): void
@@ -105,7 +105,7 @@ export class GroupBadgeRenderManager extends NitroManager implements IGroupBadge
         this._partColors = data.partColors;
         this._isReady = true;
 
-        console.log(this.renderBadge('b01200s06104'));
+        console.log(this.renderBadge('s84033s86034s97035'));
     }
 
     private loadAsset(name: string): Promise<NitroTexture>
