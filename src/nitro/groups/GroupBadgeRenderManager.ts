@@ -43,7 +43,7 @@ export class GroupBadgeRenderManager extends NitroManager implements IGroupBadge
 
     public async renderBadge(badgeStr: string): Promise<string>
     {
-        if(!this._isReady) return null;
+        if(!this._isReady) return Promise.reject('Not ready');
 
         const badge = new GroupBadge(badgeStr);
 
@@ -105,7 +105,6 @@ export class GroupBadgeRenderManager extends NitroManager implements IGroupBadge
         this._partColors = data.partColors;
         this._isReady = true;
 
-        console.log('lol');
         console.log(this.renderBadge('b01200s06104'));
     }
 
