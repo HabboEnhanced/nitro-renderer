@@ -22,6 +22,8 @@ import { INitroCommunicationManager } from './communication/INitroCommunicationM
 import { NitroCommunicationManager } from './communication/NitroCommunicationManager';
 import { LegacyExternalInterface } from './externalInterface/LegacyExternalInterface';
 import { GameMessageHandler } from './game/GameMessageHandler';
+import { GroupBadgeRenderManager } from './groups/GroupBadgeRenderManager';
+import { IGroupBadgeRenderManager } from './groups/IGroupBadgeRenderManager';
 import { INitro } from './INitro';
 import { INitroLocalizationManager } from './localization/INitroLocalizationManager';
 import { NitroLocalizationManager } from './localization/NitroLocalizationManager';
@@ -56,6 +58,7 @@ export class Nitro extends Application implements INitro
     private _localization: INitroLocalizationManager;
     private _communication: INitroCommunicationManager;
     private _avatar: IAvatarRenderManager;
+    private _groupBadge:IGroupBadgeRenderManager;
     private _roomEngine: IRoomEngine;
     private _sessionDataManager: ISessionDataManager;
     private _roomSessionManager: IRoomSessionManager;
@@ -81,6 +84,7 @@ export class Nitro extends Application implements INitro
         this._localization              = new NitroLocalizationManager();
         this._communication             = new NitroCommunicationManager(core.communication);
         this._avatar                    = new AvatarRenderManager();
+        this._groupBadge                = new GroupBadgeRenderManager();
         this._roomEngine                = new RoomEngine(this._communication);
         this._sessionDataManager        = new SessionDataManager(this._communication);
         this._roomSessionManager        = new RoomSessionManager(this._communication, this._roomEngine);
@@ -134,6 +138,8 @@ export class Nitro extends Application implements INitro
         if(this._isReady || this._isDisposed) return;
 
         if(this._avatar) this._avatar.init();
+
+        if(this._groupBadge) this._groupBadge.init();
 
         if(this._soundManager) this._soundManager.init();
 
@@ -196,6 +202,11 @@ export class Nitro extends Application implements INitro
             this._avatar.dispose();
 
             this._avatar = null;
+        }
+
+        if(this._groupBadge)
+        {
+            this._groupBadge.dispose();
         }
 
         if(this._soundManager)
@@ -371,6 +382,11 @@ export class Nitro extends Application implements INitro
     public get avatar(): IAvatarRenderManager
     {
         return this._avatar;
+    }
+
+    public get groupBadge(): IGroupBadgeRenderManager
+    {
+        return this._groupBadge;
     }
 
     public get roomEngine(): IRoomEngine

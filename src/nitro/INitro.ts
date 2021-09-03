@@ -9,6 +9,7 @@ import { IRoomManager } from '../room/IRoomManager';
 import { IAvatarRenderManager } from './avatar/IAvatarRenderManager';
 import { IRoomCameraWidgetManager } from './camera/IRoomCameraWidgetManager';
 import { INitroCommunicationManager } from './communication/INitroCommunicationManager';
+import { IGroupBadgeRenderManager } from './groups/IGroupBadgeRenderManager';
 import { INitroLocalizationManager } from './localization/INitroLocalizationManager';
 import { IRoomEngine } from './room/IRoomEngine';
 import { IRoomSessionManager } from './session/IRoomSessionManager';
@@ -36,6 +37,7 @@ export interface INitro extends Application
     localization: INitroLocalizationManager;
     communication: INitroCommunicationManager;
     avatar: IAvatarRenderManager;
+    groupBadge: IGroupBadgeRenderManager;
     roomEngine: IRoomEngine;
     sessionDataManager: ISessionDataManager;
     roomSessionManager: IRoomSessionManager;

@@ -5,6 +5,7 @@ export * from './enums';
 export * from './events';
 export * from './externalInterface';
 export * from './game';
+export * from './groups';
 export * from './INitro';
 export * from './localization';
 export * from './Nitro';
