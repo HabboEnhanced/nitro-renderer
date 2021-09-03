@@ -54,26 +54,35 @@ export class BadgeImageManager
     private getBadgeTexture(badgeName: string, type: string = BadgeImageManager.NORMAL_BADGE): Texture<Resource>
     {
         const url = this.getBadgeUrl(badgeName, type);
-
-        const existing = this._assets.getTexture(url);
-
-        if(existing) return existing.clone();
-
-        if(this._requestedBadges.get(badgeName)) return null;
-
-        if(url)
+        console.log(url);
+        if(url.startsWith('base64'))
         {
-            this._requestedBadges.set(badgeName, true);
+            const texture = Texture.from(url);
 
-            this._assets.downloadAsset(url, (flag: boolean) =>
+            if(texture && this._events) this._events.dispatchEvent(new BadgeImageReadyEvent(badgeName, texture.clone()));
+        }
+        else
+        {
+            const existing = this._assets.getTexture(url);
+
+            if(existing) return existing.clone();
+
+            if(this._requestedBadges.get(badgeName)) return null;
+
+            if(url)
             {
-                if(flag)
-                {
-                    const texture = this._assets.getTexture(url);
+                this._requestedBadges.set(badgeName, true);
 
-                    if(texture && this._events) this._events.dispatchEvent(new BadgeImageReadyEvent(badgeName, texture.clone()));
-                }
-            });
+                this._assets.downloadAsset(url, (flag: boolean) =>
+                {
+                    if(flag)
+                    {
+                        const texture = this._assets.getTexture(url);
+
+                        if(texture && this._events) this._events.dispatchEvent(new BadgeImageReadyEvent(badgeName, texture.clone()));
+                    }
+                });
+            }
         }
 
         return null;
@@ -98,9 +107,15 @@ export class BadgeImageManager
             case BadgeImageManager.NORMAL_BADGE:
                 url = (Nitro.instance.getConfiguration<string>('badge.asset.url')).replace('%badgename%', badge);
                 break;
-            case BadgeImageManager.GROUP_BADGE:
-                url = (Nitro.instance.getConfiguration<string>('badge.asset.group.url')).replace('%badgedata%', badge);
+            case BadgeImageManager.GROUP_BADGE: {
+                const externalUrl = Nitro.instance.getConfiguration<string>('badge.asset.group.external.url');
+
+                if(externalUrl && externalUrl.length > 0)
+                    url = externalUrl.replace('%badgedata%', badge);
+                else
+                    url = Nitro.instance.groupBadge.renderBadge(badge);
                 break;
+            }
         }
 
         return url;
