@@ -47,6 +47,8 @@ export class GroupBadgeRenderManager extends NitroManager implements IGroupBadge
 
         const badge = new GroupBadge(badgeStr);
 
+        const imagePath = Nitro.instance.getConfiguration<string>('badge.asset.grouparts.url');
+
         let partIndex = 0;
         for(let i = 0; i < badgeStr.length; i+=6)
         {
@@ -57,7 +59,9 @@ export class GroupBadgeRenderManager extends NitroManager implements IGroupBadge
 
             if(partType === 't') partId += 100;
 
-            const assets = partType === 'b' ? this._bases.get(partId) : this._symbols.get(partId);
+            const isBase = (partType === 'b');
+
+            const assets = isBase ? this._bases.get(partId) : this._symbols.get(partId);
 
             const textures: NitroTexture[] = [];
 
@@ -67,7 +71,7 @@ export class GroupBadgeRenderManager extends NitroManager implements IGroupBadge
                 {
                     if(!this._assets.has(asset))
                     {
-                        const loadedAsset = await this.loadAsset(asset);
+                        const loadedAsset = await this.loadAsset(imagePath.replace('%part%', asset));
                         this._assets.set(asset, loadedAsset);
                     }
 
@@ -108,19 +112,17 @@ export class GroupBadgeRenderManager extends NitroManager implements IGroupBadge
         console.log(this.renderBadge('s84033s86034s97035'));
     }
 
-    private loadAsset(name: string): Promise<NitroTexture>
+    private loadAsset(path: string): Promise<NitroTexture>
     {
         return new Promise((resolve, reject) =>
         {
             const image = new Image();
-            const sourceUrl =  Nitro.instance.getConfiguration<string[]>('image.library.badgepart.url');
-            const imgSrc = (((sourceUrl + 'badgepart_') + name) + '.png');
 
             image.crossOrigin   = '*';
 
             image.onload = () => resolve(NitroTexture.from(image));
             image.onerror = reject;
-            image.src           = imgSrc;
+            image.src = path;
         });
     }
 }
