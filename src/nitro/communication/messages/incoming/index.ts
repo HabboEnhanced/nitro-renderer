@@ -10,6 +10,7 @@ export * from './game';
 export * from './generic';
 export * from './group';
 export * from './help';
+export * from './handshake';
 export * from './IncomingHeader';
 export * from './inventory';
 export * from './inventory/achievements';

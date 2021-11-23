@@ -1,5 +1,11 @@
 export class OutgoingHeader
 {
+    // DONE
+    public static RELEASE_VERSION                = 4000;
+    public static INIT_DH_HANDSHAKE              = 207;
+    public static COMPLETE_DH_HANDSHAKE          = 208;
+
+    // TODO
     public static ACHIEVEMENT_LIST               = 219;
     public static AUTHENTICATION                 = -1;
     public static BOT_CONFIGURATION              = 1986;
@@ -105,7 +111,6 @@ export class OutgoingHeader
     public static PET_RIDE                       = 1036;
     public static PET_MOVE                       = 3449;
     public static RECYCLER_PRIZES                = 398;
-    public static RELEASE_VERSION                = 4000;
     public static REPORT                         = 1691;
     public static ROOM_AMBASSADOR_ALERT          = 2996;
     public static ROOM_BAN_GIVE                  = 1477;

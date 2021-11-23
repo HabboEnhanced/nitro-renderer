@@ -1,5 +1,10 @@
 export class IncomingHeader
 {
+    // DONE
+    public static DH_INIT_HANDSHAKE                = 278;
+    public static DH_COMPLETE_HANDSHAKE            = 279;
+
+    // TODO
     public static ACHIEVEMENT_LIST                 = 305;
     public static AUTHENTICATED                    = 2491;
     public static AUTHENTICATION                   = -1;

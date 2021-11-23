@@ -7,9 +7,9 @@ export class ClientReleaseVersionComposer implements IMessageComposer<Constructo
 {
     private _data: ConstructorParameters<typeof ClientReleaseVersionComposer>;
 
-    constructor(releaseVersion: string, type: string, platform: number, category: number)
+    constructor(ivBytes: string, type: string, platform: number, category: number)
     {
-        this._data = [ NitroVersion.RENDERER_VERSION, 'HTML5', ClientPlatformEnum.HTML5, ClientDeviceCategoryEnum.BROWSER ];
+        this._data = [ '18C199405558FE3C4534DF9E', 'UNITY2', 4, 3 ];
     }
 
     public getMessageArray()

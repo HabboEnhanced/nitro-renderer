@@ -1,3 +1,4 @@
+import SocketEncryption from './SocketEncryption';
 import { IEventDispatcher } from '../../events/IEventDispatcher';
 import { IMessageComposer } from '../messages/IMessageComposer';
 import { IMessageConfiguration } from '../messages/IMessageConfiguration';
@@ -16,4 +17,5 @@ export interface IConnection extends IEventDispatcher
     removeMessageEvent(event: IMessageEvent): void;
     isAuthenticated: boolean;
     dataBuffer: ArrayBuffer;
+    socketEncryption: SocketEncryption;
 }

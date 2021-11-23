@@ -11,8 +11,11 @@ import { IMessageDataWrapper } from '../messages/IMessageDataWrapper';
 import { IMessageEvent } from '../messages/IMessageEvent';
 import { MessageClassManager } from '../messages/MessageClassManager';
 import { WebSocketEventEnum } from './enums/WebSocketEventEnum';
+import { ClientCertificate } from './enums/ClientCertificate';
 import { IConnection } from './IConnection';
 import { IConnectionStateListener } from './IConnectionStateListener';
+import * as forge from 'node-forge';
+import SocketEncryption from './SocketEncryption';
 
 export class SocketConnection extends EventDispatcher implements IConnection
 {
@@ -23,6 +26,8 @@ export class SocketConnection extends EventDispatcher implements IConnection
     private _codec: ICodec;
     private _dataBuffer: ArrayBuffer;
     private _isReady: boolean;
+    private _tls: forge.tls.Connection;
+    private _socketEncryption: SocketEncryption;
 
     private _pendingClientMessages: IMessageComposer<unknown[]>[];
     private _pendingServerMessages: IMessageDataWrapper[];
@@ -40,6 +45,7 @@ export class SocketConnection extends EventDispatcher implements IConnection
         this._codec                 = new EvaWireFormat();
         this._dataBuffer            = null;
         this._isReady               = false;
+        this._socketEncryption                = new SocketEncryption();
 
         this._pendingClientMessages = [];
         this._pendingServerMessages = [];
@@ -97,11 +103,61 @@ export class SocketConnection extends EventDispatcher implements IConnection
 
         this._dataBuffer    = new ArrayBuffer(0);
         this._socket        = new WebSocket(socketUrl);
+        this._socket.binaryType = 'arraybuffer';
+        this.buildForgeClient();
 
         this._socket.addEventListener(WebSocketEventEnum.CONNECTION_OPENED, this.onOpen);
         this._socket.addEventListener(WebSocketEventEnum.CONNECTION_CLOSED, this.onClose);
         this._socket.addEventListener(WebSocketEventEnum.CONNECTION_ERROR, this.onError);
         this._socket.addEventListener(WebSocketEventEnum.CONNECTION_MESSAGE, this.onMessage);
+    }
+
+    private buildForgeClient(): void {
+        this._tls = forge.tls.createConnection({
+          server: false,
+          caStore: forge.pki.createCaStore([ClientCertificate.CERTIFICATE_AUTHORITY]),
+          sessionCache: null,
+          cipherSuites: [
+            forge.tls.CipherSuites.TLS_RSA_WITH_AES_128_CBC_SHA
+          ],
+          verify: (c, verified, depth, certs): forge.tls.Verified => {
+            let firstCertOrganization = certs[0].subject.getField('O').value;
+            let firstCertCommonName = certs[0].subject.getField('CN').value;
+            let secondCertOrganization = certs[1].subject.getField('O').value;
+            let secondCertCommonName = certs[1].subject.getField('CN').value;
+
+            return <forge.tls.Verified>(firstCertOrganization == 'Sulake Oy' && firstCertCommonName == 'game-*.habbo.com' && secondCertOrganization == 'Sulake Corporation Oy' && secondCertCommonName == 'Sulake Certificate Autority G2');
+          },
+          getCertificate: (c, hint) => {
+            return ClientCertificate.CLIENT_CERTIFICATE;
+          },
+          getPrivateKey: (c, cert) => {
+            return ClientCertificate.CLIENT_CERTIFICATE_KEY;
+          },
+          connected: c => {
+            this.dispatchConnectionEvent(SocketConnectionEvent.CONNECTION_OPENED, event);
+          },
+          tlsDataReady: c => {
+            var bytes = c.tlsData.getBytes();
+            this._socket.send(this.stringToBuffer(bytes));
+          },
+          dataReady: c => {
+            var response = c.data.getBytes();
+
+            this._dataBuffer = this.concatArrayBuffers(this._dataBuffer, new TextEncoder().encode(response).buffer);
+            this.processReceivedData();
+          },
+          closed: c => {
+            this.dispatchConnectionEvent(SocketConnectionEvent.CONNECTION_CLOSED, event);
+            this.destroySocket();
+            console.log('closed');
+          },
+          error: (c, error) => {
+            this.dispatchConnectionEvent(SocketConnectionEvent.CONNECTION_ERROR, event);
+            this.destroySocket();
+            console.error('error', error);
+          }
+        });
     }
 
     private destroySocket(): void
@@ -120,7 +176,7 @@ export class SocketConnection extends EventDispatcher implements IConnection
 
     private onOpen(event: Event): void
     {
-        this.dispatchConnectionEvent(SocketConnectionEvent.CONNECTION_OPENED, event);
+        this._socket.send(this.stringToBuffer('StartTLS'));
     }
 
     private onClose(event: CloseEvent): void
@@ -138,17 +194,26 @@ export class SocketConnection extends EventDispatcher implements IConnection
         if(!event) return;
 
         //this.dispatchConnectionEvent(SocketConnectionEvent.CONNECTION_MESSAGE, event);
+        let buffer: Uint8Array = new Uint8Array(event.data);
 
-        const reader = new FileReader();
+        if (buffer.length == 0)
+          return;
 
-        reader.readAsArrayBuffer(event.data);
+        if (buffer.length == 2 && buffer[0] == 79 && buffer[1] == 75) {
+          this._tls.handshake();
+        } else {
+          this._tls.process(String.fromCharCode.apply(null, buffer));
+        }
+    }
 
-        reader.onloadend = () =>
-        {
-            this._dataBuffer = this.concatArrayBuffers(this._dataBuffer, (reader.result as ArrayBuffer));
+    public stringToBuffer(string: string): ArrayBuffer {
+        var buf = new ArrayBuffer(string.length);
+        var bufView = new Uint8Array(buf);
+        for (var i = 0, strLen = string.length; i < strLen; i++) {
+          bufView[i] = string.charCodeAt(i);
+        }
 
-            this.processReceivedData();
-        };
+        return buf;
     }
 
     private dispatchConnectionEvent(type: string, event: Event): void
@@ -211,7 +276,7 @@ export class SocketConnection extends EventDispatcher implements IConnection
     {
         if(this._socket.readyState !== WebSocket.OPEN) return;
 
-        this._socket.send(buffer);
+        this._tls.prepare(String.fromCharCode.apply(null, new Uint8Array(buffer)));
     }
 
     public processReceivedData(): void
@@ -364,5 +429,9 @@ export class SocketConnection extends EventDispatcher implements IConnection
     public set dataBuffer(buffer: ArrayBuffer)
     {
         this._dataBuffer = buffer;
+    }
+
+    public get socketEncryption(): SocketEncryption {
+        return this._socketEncryption;
     }
 }

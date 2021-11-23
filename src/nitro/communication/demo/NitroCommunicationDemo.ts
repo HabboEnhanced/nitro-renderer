@@ -10,7 +10,14 @@ import { ClientPongComposer } from '../messages/outgoing/client/ClientPongCompos
 import { ClientReleaseVersionComposer } from '../messages/outgoing/client/ClientReleaseVersionComposer';
 import { InfoRetrieveBaseMessageComposer } from '../messages/outgoing/handshake/InfoRetrieveBaseMessageComposer';
 import { SecurityTicketComposer } from '../messages/outgoing/handshake/SecurityTicketComposer';
+import { InitDhHandshakeComposer } from '../messages/outgoing/handshake/InitDhHandshakeComposer';
 import { NitroCommunicationDemoEvent } from './NitroCommunicationDemoEvent';
+import { DhInitHandshakeMessageEvent } from '../messages/incoming/handshake/DhInitHandshakeMessageEvent';
+import { BigInteger } from 'jsbn';
+import SocketEncryption from '../../../core/communication/connections/SocketEncryption';
+import { CompleteDhHandshakeMessageComposer } from '../messages/outgoing/handshake/CompleteDhHandshakeMessageComposer';
+import { DhCompleteHandshakeMessageEvent } from '../messages/incoming/handshake/DhCompleteHandshakeMessageEvent';
+import ChaCha20 from '../../../core/communication/encryption/ChaCha20';
 
 export class NitroCommunicationDemo extends NitroManager
 {
@@ -51,8 +58,43 @@ export class NitroCommunicationDemo extends NitroManager
             connection.addEventListener(SocketConnectionEvent.CONNECTION_ERROR, this.onConnectionErrorEvent);
         }
 
-        this._communication.registerMessageEvent(new ClientPingEvent(this.onClientPingEvent.bind(this)));
-        this._communication.registerMessageEvent(new AuthenticatedEvent(this.onAuthenticatedEvent.bind(this)));
+        this._communication.registerMessageEvent(new DhInitHandshakeMessageEvent(this.onDhInitHandshakeMessageEvent.bind(this)));
+        this._communication.registerMessageEvent(new DhCompleteHandshakeMessageEvent(this.onDhCompleteHandshakeMessageEvent.bind(this)));
+        /*this._communication.registerMessageEvent(new ClientPingEvent(this.onClientPingEvent.bind(this)));
+        this._communication.registerMessageEvent(new AuthenticatedEvent(this.onAuthenticatedEvent.bind(this)));*/
+    }
+
+    private onDhCompleteHandshakeMessageEvent(event: DhCompleteHandshakeMessageEvent) : void
+    {
+        if(!event || !event.connection) return;
+        let socketEncryption: SocketEncryption = event.connection.socketEncryption;
+
+        let serverPublicKey: BigInteger = new BigInteger(socketEncryption.rsa.verify(event.getParser().serverPublicKey), 10);
+        let sharedKey: BigInteger = serverPublicKey.modPow(socketEncryption.dhPrivateKey, socketEncryption.dhPrime);
+        let sharedKeyByteArray = sharedKey.toByteArray(true);
+        let chachaKey: Uint8Array = new Uint8Array(32);
+
+        for(let i = 0; i < sharedKeyByteArray; i++)
+          chachaKey[i] = sharedKeyByteArray[i];
+
+        let ivBytes: Uint8Array = new Uint8Array([0x18, 0x19, 0x40, 0x55, 0xFE, 0xC4, 0x34, 0xF9]);
+
+        socketEncryption.incomingChaCha = new ChaCha20(chachaKey, ivBytes, 0);
+        socketEncryption.outgoingChaCha = new ChaCha20(chachaKey, ivBytes, 0);
+    }
+
+    private onDhInitHandshakeMessageEvent(event: DhInitHandshakeMessageEvent): void
+    {
+        if(!event || !event.connection) return;
+        let socketEncryption: SocketEncryption = event.connection.socketEncryption;
+
+        socketEncryption.dhPrime = new BigInteger(socketEncryption.rsa.verify(event.getParser().prime), 10);
+        socketEncryption.dhGenerator = new BigInteger(socketEncryption.rsa.verify(event.getParser().generator), 10);
+
+        socketEncryption.dhPrivateKey = new BigInteger('1835282320', 10);
+        socketEncryption.dhClientPublicKey = socketEncryption.dhGenerator.modPow(socketEncryption.dhPrivateKey, socketEncryption.dhPrime);
+
+        event.connection.send(new CompleteDhHandshakeMessageComposer(socketEncryption.rsa.encrypt(socketEncryption.dhClientPublicKey.toString())));
     }
 
     protected onDispose(): void
@@ -86,11 +128,11 @@ export class NitroCommunicationDemo extends NitroManager
 
         if(Nitro.instance.getConfiguration<boolean>('system.pong.manually', false)) this.startPonging();
 
-        this.startHandshake(connection);
-
         connection.send(new ClientReleaseVersionComposer(null, null, null, null));
 
-        this.tryAuthentication(connection);
+        this.startHandshake(connection);//
+
+        //this.tryAuthentication(connection);
     }
 
     private onConnectionClosedEvent(event: CloseEvent): void
@@ -164,6 +206,8 @@ export class NitroCommunicationDemo extends NitroManager
         this.dispatchCommunicationDemoEvent(NitroCommunicationDemoEvent.CONNECTION_HANDSHAKING, connection);
 
         this._handShaking = true;
+
+        connection.send(new InitDhHandshakeComposer());
     }
 
     private completeHandshake(connection: IConnection): void
