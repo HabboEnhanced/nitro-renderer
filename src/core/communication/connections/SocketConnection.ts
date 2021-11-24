@@ -135,7 +135,7 @@ export class SocketConnection extends EventDispatcher implements IConnection
             return ClientCertificate.CLIENT_CERTIFICATE_KEY;
           },
           connected: c => {
-            this.dispatchConnectionEvent(SocketConnectionEvent.CONNECTION_OPENED, event);
+            this.dispatchConnectionEvent(SocketConnectionEvent.CONNECTION_OPENED, null);
           },
           tlsDataReady: c => {
             var bytes = c.tlsData.getBytes();
@@ -144,16 +144,16 @@ export class SocketConnection extends EventDispatcher implements IConnection
           dataReady: c => {
             var response = c.data.getBytes();
 
-            this._dataBuffer = this.concatArrayBuffers(this._dataBuffer, new TextEncoder().encode(response).buffer);
+            this._dataBuffer = this.concatArrayBuffers(this._dataBuffer, this.stringToBuffer(response));
             this.processReceivedData();
           },
           closed: c => {
-            this.dispatchConnectionEvent(SocketConnectionEvent.CONNECTION_CLOSED, event);
+            this.dispatchConnectionEvent(SocketConnectionEvent.CONNECTION_CLOSED, null);
             this.destroySocket();
             console.log('closed');
           },
           error: (c, error) => {
-            this.dispatchConnectionEvent(SocketConnectionEvent.CONNECTION_ERROR, event);
+            this.dispatchConnectionEvent(SocketConnectionEvent.CONNECTION_ERROR, null);
             this.destroySocket();
             console.error('error', error);
           }
@@ -266,7 +266,17 @@ export class SocketConnection extends EventDispatcher implements IConnection
 
             if(Nitro.instance.getConfiguration<boolean>('system.packet.log')) console.log(`OutgoingComposer: [${ header }] ${ composer.constructor.name }`, message);
 
-            this.write(encoded.getBuffer());
+            if (this._socketEncryption.outgoingChaCha) {
+                let outBuffer = new Uint8Array(encoded.getBuffer());
+                let bytesToEncrypt = new Uint8Array([outBuffer[5], outBuffer[4]]);
+                let encryptedBytes: Uint8Array = this._socketEncryption.outgoingChaCha.encrypt(bytesToEncrypt);
+                outBuffer[4] = encryptedBytes[1];
+                outBuffer[5] = encryptedBytes[0];
+
+                this.write(outBuffer.buffer);
+            } else {
+                this.write(encoded.getBuffer());
+            }
         }
 
         return true;

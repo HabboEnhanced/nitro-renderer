@@ -55,6 +55,24 @@ export class BinaryWriter
         return this;
     }
 
+    public writeLong(long: number): BinaryWriter
+    {
+        const array = new Uint8Array(8);
+
+        array[0] = 0;
+        array[1] = 0;
+        array[2] = 0;
+        array[3] = 0;
+        array[4] = long >> 24;
+        array[5] = long >> 16;
+        array[6] = long >> 8;
+        array[7] = long & 0xFF;
+
+        this.appendArray(array);
+
+        return this;
+    }
+
     public writeString(string: string, includeLength: boolean = true): BinaryWriter
     {
         const array = new TextEncoder().encode(string);

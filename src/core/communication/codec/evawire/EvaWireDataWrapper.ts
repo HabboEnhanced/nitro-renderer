@@ -45,6 +45,13 @@ export class EvaWireDataWrapper implements IMessageDataWrapper
         return this._buffer.readInt();
     }
 
+    public readLong(): number
+    {
+        if(!this._buffer) return -1;
+
+        return this._buffer.readLong();
+    }
+
     public readString(): string
     {
         const length    = this.readShort();
@@ -61,5 +68,9 @@ export class EvaWireDataWrapper implements IMessageDataWrapper
     public get bytesAvailable(): boolean
     {
         return (this._buffer && (this._buffer.remaining() > 0));
+    }
+
+    public get dataView(): DataView {
+        return this._buffer.dataView;
     }
 }

@@ -272,7 +272,7 @@ ChaCha20.prototype._update = function (data) {
     throw new Error('Data should be type of bytes (Uint8Array) and not empty!');
   }
 
-  var output = Buffer.alloc(data.length);
+  var output = new Uint8Array(data.length);
 
   // core function, build block and xor with input data //
   for (var i = 0; i < data.length; i++) {

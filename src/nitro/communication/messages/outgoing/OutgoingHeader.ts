@@ -4,6 +4,7 @@ export class OutgoingHeader
     public static RELEASE_VERSION                = 4000;
     public static INIT_DH_HANDSHAKE              = 207;
     public static COMPLETE_DH_HANDSHAKE          = 208;
+    public static GET_IDENTITY_AGREEMENT_TYPES   = 3240;
 
     // TODO
     public static ACHIEVEMENT_LIST               = 219;

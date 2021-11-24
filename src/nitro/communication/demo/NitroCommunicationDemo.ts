@@ -17,6 +17,7 @@ import { BigInteger } from 'jsbn';
 import SocketEncryption from '../../../core/communication/connections/SocketEncryption';
 import { CompleteDhHandshakeMessageComposer } from '../messages/outgoing/handshake/CompleteDhHandshakeMessageComposer';
 import { DhCompleteHandshakeMessageEvent } from '../messages/incoming/handshake/DhCompleteHandshakeMessageEvent';
+import { GetIdentityAgreementTypesComposer } from '../messages/outgoing/handshake/GetIdentityAgreementTypesComposer';
 import ChaCha20 from '../../../core/communication/encryption/ChaCha20';
 
 export class NitroCommunicationDemo extends NitroManager
@@ -70,17 +71,22 @@ export class NitroCommunicationDemo extends NitroManager
         let socketEncryption: SocketEncryption = event.connection.socketEncryption;
 
         let serverPublicKey: BigInteger = new BigInteger(socketEncryption.rsa.verify(event.getParser().serverPublicKey), 10);
+
         let sharedKey: BigInteger = serverPublicKey.modPow(socketEncryption.dhPrivateKey, socketEncryption.dhPrime);
         let sharedKeyByteArray = sharedKey.toByteArray(true);
         let chachaKey: Uint8Array = new Uint8Array(32);
 
-        for(let i = 0; i < sharedKeyByteArray; i++)
+        for(let i = 0; i < sharedKeyByteArray.length; i++)
           chachaKey[i] = sharedKeyByteArray[i];
 
         let ivBytes: Uint8Array = new Uint8Array([0x18, 0x19, 0x40, 0x55, 0xFE, 0xC4, 0x34, 0xF9]);
 
         socketEncryption.incomingChaCha = new ChaCha20(chachaKey, ivBytes, 0);
         socketEncryption.outgoingChaCha = new ChaCha20(chachaKey, ivBytes, 0);
+
+        event.connection.send(new GetIdentityAgreementTypesComposer());
+
+        //this.tryAuthentication(event.connection);
     }
 
     private onDhInitHandshakeMessageEvent(event: DhInitHandshakeMessageEvent): void

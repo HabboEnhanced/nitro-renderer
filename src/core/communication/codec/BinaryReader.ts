@@ -45,6 +45,17 @@ export class BinaryReader
         return int;
     }
 
+    public readLong(): number
+    {
+        this._position += 4; // skip 4 bytes
+
+        const int = this._dataView.getInt32(this._position);
+
+        this._position += 4;
+
+        return int;
+    }
+
     public remaining(): number
     {
         return this._dataView.byteLength - this._position;
@@ -58,5 +69,9 @@ export class BinaryReader
     public toArrayBuffer(): ArrayBuffer
     {
         return this._dataView.buffer;
+    }
+
+    public get dataView(): DataView {
+        return this._dataView;
     }
 }

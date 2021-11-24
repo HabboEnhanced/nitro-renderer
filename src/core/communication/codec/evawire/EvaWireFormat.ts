@@ -5,6 +5,7 @@ import { BinaryWriter } from '../BinaryWriter';
 import { Byte } from '../Byte';
 import { ICodec } from '../ICodec';
 import { Short } from '../Short';
+import { Long } from '../Long';
 import { EvaWireDataWrapper } from './EvaWireDataWrapper';
 
 export class EvaWireFormat implements ICodec
@@ -24,6 +25,7 @@ export class EvaWireFormat implements ICodec
                 if(value === null)              type = 'null';
                 else if(value instanceof Byte)  type = 'byte';
                 else if(value instanceof Short) type = 'short';
+                else if(value instanceof Long)  type = 'long';
                 else if(value instanceof ArrayBuffer) type = 'arraybuffer';
             }
 
@@ -40,6 +42,9 @@ export class EvaWireFormat implements ICodec
                     break;
                 case 'number':
                     writer.writeInt(value);
+                    break;
+                case 'long':
+                    writer.writeLong(value.value);
                     break;
                 case 'boolean':
                     writer.writeByte(value ? 1 : 0);
@@ -81,7 +86,18 @@ export class EvaWireFormat implements ICodec
 
             const extracted = container.readBytes(length);
 
-            wrappers.push(new EvaWireDataWrapper(extracted.readShort(), extracted));
+            let packetHeader: number;
+
+            if (connection.socketEncryption.incomingChaCha) {
+                let headerBytes = new Uint8Array([ extracted.readByte(), extracted.readByte() ].reverse());
+                let decryptedBytes = connection.socketEncryption.incomingChaCha.decrypt(headerBytes);
+
+                packetHeader = new DataView(decryptedBytes.buffer).getUint16(0, true);
+            } else {
+                packetHeader = extracted.readShort();
+            }
+
+            wrappers.push(new EvaWireDataWrapper(packetHeader, extracted));
 
             connection.dataBuffer = connection.dataBuffer.slice(length + 4);
         }
