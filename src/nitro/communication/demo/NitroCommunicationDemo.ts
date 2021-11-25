@@ -76,18 +76,18 @@ export class NitroCommunicationDemo extends NitroManager
     private onDhCompleteHandshakeMessageEvent(event: DhCompleteHandshakeMessageEvent) : void
     {
         if(!event || !event.connection) return;
-        let socketEncryption: SocketEncryption = event.connection.socketEncryption;
+        const socketEncryption: SocketEncryption = event.connection.socketEncryption;
 
-        let serverPublicKey: BigInteger = new BigInteger(socketEncryption.rsa.verify(event.getParser().serverPublicKey), 10);
+        const serverPublicKey: BigInteger = new BigInteger(socketEncryption.rsa.verify(event.getParser().serverPublicKey), 10);
 
-        let sharedKey: BigInteger = serverPublicKey.modPow(socketEncryption.dhPrivateKey, socketEncryption.dhPrime);
-        let sharedKeyByteArray = sharedKey.toByteArray(true);
-        let chachaKey: Uint8Array = new Uint8Array(32);
+        const sharedKey: BigInteger = serverPublicKey.modPow(socketEncryption.dhPrivateKey, socketEncryption.dhPrime);
+        const sharedKeyByteArray = sharedKey.toByteArray(true);
+        const chachaKey: Uint8Array = new Uint8Array(32);
 
         for(let i = 0; i < sharedKeyByteArray.length; i++)
-          chachaKey[i] = sharedKeyByteArray[i];
+            chachaKey[i] = sharedKeyByteArray[i];
 
-        let ivBytes: Uint8Array = new Uint8Array([0x18, 0x19, 0x40, 0x55, 0xFE, 0xC4, 0x34, 0xF9]);
+        const ivBytes: Uint8Array = new Uint8Array([0x18, 0x19, 0x40, 0x55, 0xFE, 0xC4, 0x34, 0xF9]);
 
         socketEncryption.incomingChaCha = new ChaCha20(chachaKey, ivBytes, 0);
         socketEncryption.outgoingChaCha = new ChaCha20(chachaKey, ivBytes, 0);
@@ -95,7 +95,7 @@ export class NitroCommunicationDemo extends NitroManager
         event.connection.send(new GetIdentityAgreementTypesComposer());
         event.connection.send(new VersionCheckComposer(0, '0.21.0', ''));
 
-        let randomMachineId: string = [...Array(76)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+        const randomMachineId: string = [...Array(76)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
         event.connection.send(new UniqueMachineIdComposer(randomMachineId, 'n/a', 'Chrome 95.0.4638.69', 'n/a'));
 
         this.tryAuthentication(event.connection);
@@ -104,7 +104,7 @@ export class NitroCommunicationDemo extends NitroManager
     private onDhInitHandshakeMessageEvent(event: DhInitHandshakeMessageEvent): void
     {
         if(!event || !event.connection) return;
-        let socketEncryption: SocketEncryption = event.connection.socketEncryption;
+        const socketEncryption: SocketEncryption = event.connection.socketEncryption;
 
         socketEncryption.dhPrime = new BigInteger(socketEncryption.rsa.verify(event.getParser().prime), 10);
         socketEncryption.dhGenerator = new BigInteger(socketEncryption.rsa.verify(event.getParser().generator), 10);
@@ -175,17 +175,20 @@ export class NitroCommunicationDemo extends NitroManager
 
     private tryAuthentication(connection: IConnection): void
     {
-        if (this._sso) {
+        if(this._sso)
+        {
             connection.send(new LoginWithTicketComposer(this._sso, Nitro.instance.time));
             return;
         }
 
-        if (this._credentials) {
+        if(this._credentials)
+        {
             connection.send(new LoginWithPasswordComposer(this._credentials[0], this._credentials[1], 0, 0));
             return;
         }
 
-        if (this._token) {
+        if(this._token)
+        {
             connection.send(new LoginWithTokenComposer(this._token));
             return;
         }

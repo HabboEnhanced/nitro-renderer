@@ -88,12 +88,15 @@ export class EvaWireFormat implements ICodec
 
             let packetHeader: number;
 
-            if (connection.socketEncryption.incomingChaCha) {
-                let headerBytes = new Uint8Array([ extracted.readByte(), extracted.readByte() ].reverse());
-                let decryptedBytes = connection.socketEncryption.incomingChaCha.decrypt(headerBytes);
+            if(connection.socketEncryption.incomingChaCha)
+            {
+                const headerBytes = new Uint8Array([ extracted.readByte(), extracted.readByte() ].reverse());
+                const decryptedBytes = connection.socketEncryption.incomingChaCha.decrypt(headerBytes);
 
                 packetHeader = new DataView(decryptedBytes.buffer).getUint16(0, true);
-            } else {
+            }
+            else
+            {
                 packetHeader = extracted.readShort();
             }
 

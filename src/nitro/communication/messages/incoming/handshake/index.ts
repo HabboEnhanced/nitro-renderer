@@ -1,2 +1,2 @@
-export * from './DhInitHandshakeMessageEvent'
-export * from './DhCompleteHandshakeMessageEvent'
+export * from './DhInitHandshakeMessageEvent';
+export * from './DhCompleteHandshakeMessageEvent';

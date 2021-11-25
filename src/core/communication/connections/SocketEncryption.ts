@@ -2,7 +2,8 @@ import RSAKey from '../encryption/RSAKey';
 import RSA from '../encryption/RSA';
 import { BigInteger } from 'jsbn';
 
-export default class SocketEncryption {
+export default class SocketEncryption
+{
     private _rsa: any;
     private _dhPrime: BigInteger;
     private _dhGenerator: BigInteger;
@@ -11,7 +12,8 @@ export default class SocketEncryption {
     private _incomingChaCha: any;
     private _outgoingChaCha: any;
 
-    constructor() {
+    constructor()
+    {
         this._rsa = new RSA();
         this._rsa.setPublic(RSAKey.N, RSAKey.E);
 
@@ -19,55 +21,68 @@ export default class SocketEncryption {
         this._outgoingChaCha = null;
     }
 
-    public set incomingChaCha(incomingChaCha: any) {
+    public set incomingChaCha(incomingChaCha: any)
+    {
         this._incomingChaCha = incomingChaCha;
     }
 
-    public set outgoingChaCha(outgoingChaCha: any) {
+    public set outgoingChaCha(outgoingChaCha: any)
+    {
         this._outgoingChaCha = outgoingChaCha;
     }
 
-    public set dhPrime (dhPrime: BigInteger) {
+    public set dhPrime (dhPrime: BigInteger)
+    {
         this._dhPrime = dhPrime;
     }
 
-    public set dhGenerator (dhGenerator: BigInteger) {
+    public set dhGenerator (dhGenerator: BigInteger)
+    {
         this._dhGenerator = dhGenerator;
     }
 
-    public set dhPrivateKey (dhPrivateKey: BigInteger) {
+    public set dhPrivateKey (dhPrivateKey: BigInteger)
+    {
         this._dhPrivateKey = dhPrivateKey;
     }
 
-    public set dhClientPublicKey (dhClientPublicKey: BigInteger) {
+    public set dhClientPublicKey (dhClientPublicKey: BigInteger)
+    {
         this._dhClientPublicKey = dhClientPublicKey;
     }
 
-    public get incomingChaCha(): any {
+    public get incomingChaCha(): any
+    {
         return this._incomingChaCha;
     }
 
-    public get outgoingChaCha(): any {
+    public get outgoingChaCha(): any
+    {
         return this._outgoingChaCha;
     }
 
-    public get dhGenerator(): BigInteger {
+    public get dhGenerator(): BigInteger
+    {
         return this._dhGenerator;
     }
 
-    public get dhPrime(): BigInteger {
+    public get dhPrime(): BigInteger
+    {
         return this._dhPrime;
     }
 
-    public get dhPrivateKey(): BigInteger {
+    public get dhPrivateKey(): BigInteger
+    {
         return this._dhPrivateKey;
     }
 
-    public get dhClientPublicKey(): BigInteger {
+    public get dhClientPublicKey(): BigInteger
+    {
         return this._dhClientPublicKey;
     }
 
-    public get rsa(): any {
+    public get rsa(): any
+    {
         return this._rsa;
     }
 }

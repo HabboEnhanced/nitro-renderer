@@ -112,51 +112,60 @@ export class SocketConnection extends EventDispatcher implements IConnection
         this._socket.addEventListener(WebSocketEventEnum.CONNECTION_MESSAGE, this.onMessage);
     }
 
-    private buildForgeClient(): void {
+    private buildForgeClient(): void
+    {
         this._tls = forge.tls.createConnection({
-          server: false,
-          caStore: forge.pki.createCaStore([ClientCertificate.CERTIFICATE_AUTHORITY]),
-          sessionCache: null,
-          cipherSuites: [
-            forge.tls.CipherSuites.TLS_RSA_WITH_AES_128_CBC_SHA
-          ],
-          verify: (c, verified, depth, certs): forge.tls.Verified => {
-            let firstCertOrganization = certs[0].subject.getField('O').value;
-            let firstCertCommonName = certs[0].subject.getField('CN').value;
-            let secondCertOrganization = certs[1].subject.getField('O').value;
-            let secondCertCommonName = certs[1].subject.getField('CN').value;
+            server: false,
+            caStore: forge.pki.createCaStore([ClientCertificate.CERTIFICATE_AUTHORITY]),
+            sessionCache: null,
+            cipherSuites: [
+                forge.tls.CipherSuites.TLS_RSA_WITH_AES_128_CBC_SHA
+            ],
+            verify: (c, verified, depth, certs): forge.tls.Verified =>
+            {
+                const firstCertOrganization = certs[0].subject.getField('O').value;
+                const firstCertCommonName = certs[0].subject.getField('CN').value;
+                const secondCertOrganization = certs[1].subject.getField('O').value;
+                const secondCertCommonName = certs[1].subject.getField('CN').value;
 
-            return <forge.tls.Verified>(firstCertOrganization == 'Sulake Oy' && firstCertCommonName == 'game-*.habbo.com' && secondCertOrganization == 'Sulake Corporation Oy' && secondCertCommonName == 'Sulake Certificate Autority G2');
-          },
-          getCertificate: (c, hint) => {
-            return ClientCertificate.CLIENT_CERTIFICATE;
-          },
-          getPrivateKey: (c, cert) => {
-            return ClientCertificate.CLIENT_CERTIFICATE_KEY;
-          },
-          connected: c => {
-            this.dispatchConnectionEvent(SocketConnectionEvent.CONNECTION_OPENED, null);
-          },
-          tlsDataReady: c => {
-            var bytes = c.tlsData.getBytes();
-            this._socket.send(this.stringToBuffer(bytes));
-          },
-          dataReady: c => {
-            var response = c.data.getBytes();
+                return <forge.tls.Verified>(firstCertOrganization == 'Sulake Oy' && firstCertCommonName == 'game-*.habbo.com' && secondCertOrganization == 'Sulake Corporation Oy' && secondCertCommonName == 'Sulake Certificate Autority G2');
+            },
+            getCertificate: (c, hint) =>
+            {
+                return ClientCertificate.CLIENT_CERTIFICATE;
+            },
+            getPrivateKey: (c, cert) =>
+            {
+                return ClientCertificate.CLIENT_CERTIFICATE_KEY;
+            },
+            connected: c =>
+            {
+                this.dispatchConnectionEvent(SocketConnectionEvent.CONNECTION_OPENED, null);
+            },
+            tlsDataReady: c =>
+            {
+                const bytes = c.tlsData.getBytes();
+                this._socket.send(this.stringToBuffer(bytes));
+            },
+            dataReady: c =>
+            {
+                const response = c.data.getBytes();
 
-            this._dataBuffer = this.concatArrayBuffers(this._dataBuffer, this.stringToBuffer(response));
-            this.processReceivedData();
-          },
-          closed: c => {
-            this.dispatchConnectionEvent(SocketConnectionEvent.CONNECTION_CLOSED, null);
-            this.destroySocket();
-            console.log('closed');
-          },
-          error: (c, error) => {
-            this.dispatchConnectionEvent(SocketConnectionEvent.CONNECTION_ERROR, null);
-            this.destroySocket();
-            console.error('error', error);
-          }
+                this._dataBuffer = this.concatArrayBuffers(this._dataBuffer, this.stringToBuffer(response));
+                this.processReceivedData();
+            },
+            closed: c =>
+            {
+                this.dispatchConnectionEvent(SocketConnectionEvent.CONNECTION_CLOSED, null);
+                this.destroySocket();
+                console.log('closed');
+            },
+            error: (c, error) =>
+            {
+                this.dispatchConnectionEvent(SocketConnectionEvent.CONNECTION_ERROR, null);
+                this.destroySocket();
+                console.error('error', error);
+            }
         });
     }
 
@@ -194,23 +203,28 @@ export class SocketConnection extends EventDispatcher implements IConnection
         if(!event) return;
 
         //this.dispatchConnectionEvent(SocketConnectionEvent.CONNECTION_MESSAGE, event);
-        let buffer: Uint8Array = new Uint8Array(event.data);
+        const buffer: Uint8Array = new Uint8Array(event.data);
 
-        if (buffer.length == 0)
-          return;
+        if(buffer.length == 0)
+            return;
 
-        if (buffer.length == 2 && buffer[0] == 79 && buffer[1] == 75) {
-          this._tls.handshake();
-        } else {
-          this._tls.process(String.fromCharCode.apply(null, buffer));
+        if(buffer.length == 2 && buffer[0] == 79 && buffer[1] == 75)
+        {
+            this._tls.handshake();
+        }
+        else
+        {
+            this._tls.process(String.fromCharCode.apply(null, buffer));
         }
     }
 
-    public stringToBuffer(string: string): ArrayBuffer {
-        var buf = new ArrayBuffer(string.length);
-        var bufView = new Uint8Array(buf);
-        for (var i = 0, strLen = string.length; i < strLen; i++) {
-          bufView[i] = string.charCodeAt(i);
+    public stringToBuffer(string: string): ArrayBuffer
+    {
+        const buf = new ArrayBuffer(string.length);
+        const bufView = new Uint8Array(buf);
+        for(let i = 0, strLen = string.length; i < strLen; i++)
+        {
+            bufView[i] = string.charCodeAt(i);
         }
 
         return buf;
@@ -266,15 +280,18 @@ export class SocketConnection extends EventDispatcher implements IConnection
 
             if(Nitro.instance.getConfiguration<boolean>('system.packet.log')) console.log(`OutgoingComposer: [${ header }] ${ composer.constructor.name }`, message);
 
-            if (this._socketEncryption.outgoingChaCha) {
-                let outBuffer = new Uint8Array(encoded.getBuffer());
-                let bytesToEncrypt = new Uint8Array([outBuffer[5], outBuffer[4]]);
-                let encryptedBytes: Uint8Array = this._socketEncryption.outgoingChaCha.encrypt(bytesToEncrypt);
+            if(this._socketEncryption.outgoingChaCha)
+            {
+                const outBuffer = new Uint8Array(encoded.getBuffer());
+                const bytesToEncrypt = new Uint8Array([outBuffer[5], outBuffer[4]]);
+                const encryptedBytes: Uint8Array = this._socketEncryption.outgoingChaCha.encrypt(bytesToEncrypt);
                 outBuffer[4] = encryptedBytes[1];
                 outBuffer[5] = encryptedBytes[0];
 
                 this.write(outBuffer.buffer);
-            } else {
+            }
+            else
+            {
                 this.write(encoded.getBuffer());
             }
         }
@@ -441,7 +458,8 @@ export class SocketConnection extends EventDispatcher implements IConnection
         this._dataBuffer = buffer;
     }
 
-    public get socketEncryption(): SocketEncryption {
+    public get socketEncryption(): SocketEncryption
+    {
         return this._socketEncryption;
     }
 }

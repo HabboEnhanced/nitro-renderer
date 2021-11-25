@@ -71,7 +71,8 @@ export class BinaryReader
         return this._dataView.buffer;
     }
 
-    public get dataView(): DataView {
+    public get dataView(): DataView
+    {
         return this._dataView;
     }
 }
