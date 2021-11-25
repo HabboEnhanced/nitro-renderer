@@ -6,7 +6,13 @@ import { IncomingHeader } from './messages/incoming/IncomingHeader';
 import { ClientReleaseVersionComposer } from './messages/outgoing/client/ClientReleaseVersionComposer';
 import { InitDhHandshakeComposer } from './messages/outgoing/handshake/InitDhHandshakeComposer';
 import { GetIdentityAgreementTypesComposer } from './messages/outgoing/handshake/GetIdentityAgreementTypesComposer';
+import { VersionCheckComposer } from './messages/outgoing/handshake/VersionCheckComposer';
 import { OutgoingHeader } from './messages/outgoing/OutgoingHeader';
+import { ClientPingEvent } from './messages/incoming/client/ClientPingEvent';
+import { ClientPongComposer } from './messages/outgoing/client/ClientPongComposer';
+import { LoginWithPasswordComposer, LoginWithTicketComposer, LoginWithTokenComposer } from './messages/outgoing/handshake';
+import { UniqueMachineIdComposer } from './messages/outgoing/handshake/UniqueMachineIdComposer';
+import { AuthenticatedEvent } from './messages/incoming/security/AuthenticatedEvent';
 
 export class NitroMessages implements IMessageConfiguration
 {
@@ -24,16 +30,24 @@ export class NitroMessages implements IMessageConfiguration
 
     private registerEvents(): void
     {
-        this._events.set(IncomingHeader.DH_INIT_HANDSHAKE, DhInitHandshakeMessageEvent);
-        this._events.set(IncomingHeader.DH_COMPLETE_HANDSHAKE, DhCompleteHandshakeMessageEvent);
+        this._events.set(IncomingHeader.DhInitHandshake, DhInitHandshakeMessageEvent);
+        this._events.set(IncomingHeader.DhCompleteHandshake, DhCompleteHandshakeMessageEvent);
+        this._events.set(IncomingHeader.Ping, ClientPingEvent);
+        this._events.set(IncomingHeader.Ok, AuthenticatedEvent);
     }
 
     private registerComposers(): void
     {
-        this._composers.set(OutgoingHeader.RELEASE_VERSION, ClientReleaseVersionComposer);
-        this._composers.set(OutgoingHeader.INIT_DH_HANDSHAKE, InitDhHandshakeComposer);
-        this._composers.set(OutgoingHeader.COMPLETE_DH_HANDSHAKE, CompleteDhHandshakeMessageComposer);
-        this._composers.set(OutgoingHeader.GET_IDENTITY_AGREEMENT_TYPES, GetIdentityAgreementTypesComposer);
+        this._composers.set(OutgoingHeader.Hello, ClientReleaseVersionComposer);
+        this._composers.set(OutgoingHeader.InitDhHandshake, InitDhHandshakeComposer);
+        this._composers.set(OutgoingHeader.CompleteDhHandshake, CompleteDhHandshakeMessageComposer);
+        this._composers.set(OutgoingHeader.GetIdentityAgreementTypes, GetIdentityAgreementTypesComposer);
+        this._composers.set(OutgoingHeader.Pong, ClientPongComposer);
+        this._composers.set(OutgoingHeader.VersionCheck, VersionCheckComposer);
+        this._composers.set(OutgoingHeader.UniqueMachineId, UniqueMachineIdComposer);
+        this._composers.set(OutgoingHeader.LoginWithTicket, LoginWithTicketComposer);
+        this._composers.set(OutgoingHeader.LoginWithPassword, LoginWithPasswordComposer);
+        this._composers.set(OutgoingHeader.LoginWithToken, LoginWithTokenComposer);
     }
 
     public get events(): Map<number, Function>

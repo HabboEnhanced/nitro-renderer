@@ -125,8 +125,19 @@ export class Nitro extends Application implements INitro
 
         //@ts-ignore
         const sso = (NitroConfig.sso as string);
+        //@ts-ignore
+        const credentials = (NitroConfig.credentials as Array<string>);
+        //@ts-ignore
+        const token = (NitroConfig.token as string);
 
-        instance.communication.demo.setSSO(sso);
+        if (sso)
+          instance.communication.demo.setSSO(sso);
+        
+        if (credentials)
+          instance.communication.demo.setCredentials(credentials);
+
+        if (token)
+          instance.communication.demo.setToken(token);
     }
 
     public init(): void

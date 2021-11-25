@@ -1,12 +1,12 @@
 import { IMessageComposer } from '../../../../../core/communication/messages/IMessageComposer';
 
-export class SecurityTicketComposer implements IMessageComposer<ConstructorParameters<typeof SecurityTicketComposer>>
+export class LoginWithTicketComposer implements IMessageComposer<ConstructorParameters<typeof LoginWithTicketComposer>>
 {
-    private _data: ConstructorParameters<typeof SecurityTicketComposer>;
+    private _data: ConstructorParameters<typeof LoginWithTicketComposer>;
 
     constructor(ticket: string, time: number)
     {
-        this._data = [ ticket, time ];
+        this._data = [ ticket, 0 ];
     }
 
     public getMessageArray()
